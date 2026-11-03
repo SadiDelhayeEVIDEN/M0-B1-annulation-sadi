@@ -5,6 +5,7 @@ from contextlib import asynccontextmanager
 from pathlib import Path
 
 import joblib
+import pandas as pd
 from fastapi import FastAPI, HTTPException
 
 from app.schemas import Booking, PredictionResponse
@@ -41,9 +42,14 @@ def health() -> dict:
 
 @app.post("/predict", response_model=PredictionResponse)
 def predict(booking: Booking) -> PredictionResponse:
-    """Prédit l'annulation d'une réservation.
+    """Prédit l'annulation d'une réservation."""
+    model = state.get("model")
+    if model is None:
+        raise HTTPException(status_code=503, detail="Modèle non chargé")
 
-    TODO 
-    
-    """
-    raise HTTPException(status_code=501, detail="Route /predict pas encore implémentée")
+    # Une ligne, avec les colonnes dans l'ordre vu à l'entraînement
+    X = pd.DataFrame([booking.model_dump()], columns=model.feature_names_in_)
+
+    annulation = bool(model.predict(X)[0])
+    probabilite = float(model.predict_proba(X)[0, 1])  # colonne 1 = classe « annulée »
+    return PredictionResponse(annulation=annulation, probabilite_annulation=probabilite)
