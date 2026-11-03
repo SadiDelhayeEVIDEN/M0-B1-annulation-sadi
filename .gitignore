@@ -1,0 +1,16 @@
+# Environnements virtuels
+.venv/
+venv/
+
+# Python
+__pycache__/
+*.pyc
+
+# Tests
+.pytest_cache/
+
+# Secrets
+.env
+
+# Logs
+logs/
